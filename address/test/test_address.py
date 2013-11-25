@@ -10,7 +10,6 @@ class AddressTest(unittest.TestCase):
 
     def test_basic_full_address(self):
         addr = Address("2 N. Park Street, Madison, WI 53703", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "2")
         self.assertTrue(addr.street_prefix == "N.")
         self.assertTrue(addr.street == "Park")
@@ -23,7 +22,6 @@ class AddressTest(unittest.TestCase):
 
     def test_multi_address(self):
         addr = Address("416/418 N. Carroll St.", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "416")
         self.assertTrue(addr.street_prefix == "N.")
         self.assertTrue(addr.street == "Carroll")
@@ -36,7 +34,6 @@ class AddressTest(unittest.TestCase):
 
     def test_no_suffix(self):
         addr = Address("230 Lakelawn", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "230")
         self.assertTrue(addr.street_prefix == None)
         self.assertTrue(addr.street == "Lakelawn")
@@ -62,7 +59,6 @@ class AddressTest(unittest.TestCase):
 
     def test_streets_named_after_states(self):
         addr = Address("504 W. Washington Ave.", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "504")
         self.assertTrue(addr.street_prefix == "W.")
         self.assertTrue(addr.street == "Washington")
@@ -75,7 +71,6 @@ class AddressTest(unittest.TestCase):
 
     def test_hash_apartment(self):
         addr = Address("407 West Doty St. #2", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "407")
         self.assertTrue(addr.street_prefix == "W.")
         self.assertTrue(addr.street == "Doty")
@@ -88,7 +83,6 @@ class AddressTest(unittest.TestCase):
 
     def test_stray_dash_apartment(self):
         addr = Address("407 West Doty St. - #2", self.parser)
-        #        print addr
         self.assertTrue(addr.house_number == "407")
         self.assertTrue(addr.street_prefix == "W.")
         self.assertTrue(addr.street == "Doty")
@@ -101,7 +95,6 @@ class AddressTest(unittest.TestCase):
 
     def test_suffixless_street_with_city(self):
         addr = Address("431 West Johnson, Madison, WI", self.parser)
-#        print addr
         self.assertTrue(addr.house_number == "431")
         self.assertTrue(addr.street_prefix == "W.")
         self.assertTrue(addr.street == "Johnson")
@@ -111,6 +104,18 @@ class AddressTest(unittest.TestCase):
         self.assertTrue(addr.zip == None)
         self.assertTrue(addr.apartment == None)
         # self.assertTrue(addr.building == None)
+
+    # Not yet passing.
+    #def test_5_digit_house_number(self):
+    #    addr = Address('51691 North Scottsdale Road', self.parser)
+    #    self.assertTrue(addr.house_number == "51691")
+    #    self.assertTrue(addr.street_prefix == "N.")
+    #    self.assertTrue(addr.street == "Scottsdale")
+    #    self.assertTrue(addr.street_suffix == "Rd.")
+    #    self.assertTrue(addr.city == None)
+    #    self.assertTrue(addr.state == None)
+    #    self.assertTrue(addr.zip == None)
+    #    self.assertTrue(addr.apartment == None)
 
 
 class AddressParserTest(unittest.TestCase):
