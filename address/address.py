@@ -41,6 +41,7 @@ class AddressParser(object):
         'Ohio': 'OH', 'Alabama': 'AL', 'New York': 'NY', 'South Dakota': 'SD', 'Colorado': 'CO', 'New Jersey': 'NJ',
         'Washington': 'WA', 'North Carolina': 'NC', 'District of Columbia': 'DC', 'Texas': 'TX', 'Nevada': 'NV',
         'Maine': 'ME', 'Rhode Island': 'RI'}
+    zips = None
 
     def __init__(self, suffixes=None, cities=None, streets=None, backend="default", dstk_api_base=None, logger=None, required_confidence=0.65):
         """
@@ -136,6 +137,31 @@ class AddressParser(object):
             for line in f:
                 self.streets.append(line.strip().lower())
 
+    def load_zips(self, filename="../zipcode.csv"):
+        """
+        Caches the zip file into memory. Erases previously cached data.
+        """
+        self.zips = {}
+        with open(filename, 'r') as zipfile:
+            for line in zipfile.readlines():
+                if line.strip() == "":
+                    continue
+                line = line.replace('"', '').replace('\n', '')
+                members = line.split(',')
+                if members[0] in self.zips:
+                    print "Duplicate zip info!", members[0]
+                self.zips[members[0]] = {
+                    "zip": members[0],
+                    "city": members[1],
+                    "state": members[2],
+                    "lat": members[3],
+                    "lng": members[4],
+                    "timezone": members[5],
+                    # Sets to True for dst==1, False for dst==0
+                    "dst": members[6] == "1"
+                }
+
+
 
 # Procedure: Go through backwards. First check for apartment number, then
 # street suffix, street name, street prefix, then building. For each sub,
@@ -161,6 +187,9 @@ class Address:
     line_number = -1
     # Confidence value from DSTK. 0 - 1, -1 for not set.
     confidence = -1
+
+    # Cache the zip lookup db.
+    zips = None
 
     def __init__(self, address, parser, line_number=-1, logger=None, dstk_pre_parse=None):
         """
@@ -327,13 +356,13 @@ class Address:
             return False
         # Multi word cities
         if self.city is not None and self.street_suffix is None and self.street is None:
-            print "Checking for multi part city", token.lower(), token.lower() in shortened_cities.keys()
+            #print "Checking for multi part city", token.lower(), token.lower() in shortened_cities.keys()
             if token.lower() + ' ' + self.city in self.parser.cities:
                 self.city = self._clean((token.lower() + ' ' + self.city).capitalize())
                 return True
             if token.lower() in shortened_cities.keys():
                 token = shortened_cities[token.lower()]
-                print "Checking for shorted multi part city", token.lower() + ' ' + self.city
+                #print "Checking for shorted multi part city", token.lower() + ' ' + self.city
                 if token.lower() + ' ' + self.city.lower() in self.parser.cities:
                     self.city = self._clean(token.capitalize() + ' ' + self.city.capitalize())
                     return True
@@ -494,11 +523,16 @@ class Address:
             addr = addr + " " + self.zip
         return addr
 
-    def _clean(self, item):
-        if item is None:
+    def zip_info(self, zip):
+        """
+        Given a zip, find the info from zipcode.csv, which is cached in self.parser. Only uses the first
+        5 digits of the zip. Returns either a dict with the zip info (zip, city, state, lat, lng, timezone,
+        dst) or None if not found in the file.
+        """
+        try:
+            return self.parser.zips[zip[0:5]]
+        except KeyError:
             return None
-        else:
-            return item.encode("utf-8", "replace")
 
     def __repr__(self):
         return unicode(self)
@@ -663,6 +697,11 @@ class Address:
                 normalized_address.append(token.lower())
         return normalized_address
 
+    def _clean(self, item):
+        if item is None:
+            return None
+        else:
+            return item.encode("utf-8", "replace")
 
 def create_cities_csv(filename="places2k.txt", output="cities.csv"):
     """

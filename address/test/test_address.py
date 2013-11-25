@@ -1,5 +1,6 @@
 import unittest
 from ..address import Address, AddressParser
+import os
 
 
 class AddressTest(unittest.TestCase):
@@ -138,6 +139,8 @@ class AddressTest(unittest.TestCase):
         self.assertEqual('NE', addr.post_direction)
     
 
+
+
     # Not yet passing.
     #def test_5_digit_house_number(self):
     #    addr = Address('51691 North Scottsdale Road', self.parser)
@@ -166,6 +169,17 @@ class AddressParserTest(unittest.TestCase):
     def test_load_states(self):
         self.assertTrue(self.ap.states["Wisconsin"] == "WI")
 
+    def test_load_zips(self):
+        self.ap.load_zips("address/zipcode.csv")
+        #print self.ap._zip_info
+        last = self.ap.zips["99950"]
+        self.assertTrue(last["zip"] == "99950")
+        self.assertTrue(last["city"] == "Ketchikan")
+        self.assertTrue(last["state"] == "AK")
+        self.assertTrue(last["lat"] == "55.875767")
+        self.assertTrue(last["lng"] == "-131.46633")
+        self.assertTrue(last["timezone"] == "-9")
+        self.assertTrue(last["dst"] == True)
     # Not using preloaded streets any more.
 #    def test_load_streets(self):
 #        self.assertTrue("mifflin" in self.ap.streets)
