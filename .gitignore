@@ -2,6 +2,8 @@ apartment_list.csv
 output.txt
 *.py[cod]
 .idea/
+include/
+local/
 MANIFEST
 
 # C extensions
