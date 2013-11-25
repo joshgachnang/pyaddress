@@ -9,7 +9,7 @@ import sys
 
 # Keep lowercase, no periods
 # Requires numbers first, then option dash plus numbers.
-street_num_regex = r'^(\d+)(-?)(\d*)$'
+street_num_regex = r'^(\d+)([-/]?)(\d*)$'
 
 apartment_regex_number = r'(#?)(\d*)(\w*)'
 cwd = os.path.dirname(os.path.realpath(__file__))
