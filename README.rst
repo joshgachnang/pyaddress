@@ -123,11 +123,20 @@ Todo
 -  Add exceptions for incorrect addresses instead of silent failing and
    letting user validate.
 
+1.2
+----
+- Added handling of 9 digit zip codes
+
+- Updated city database to National Weather Service file from 8 August 2012
+
+- Forked original address repository and continuing work at https://github.com/pcsforeducation/pyaddress
+
+
 GitHub
 ------
 
 File support requests and obtain the source from
-https://github.com/SwoopSearch/pyaddress
+https://github.com/pcsforeducation/pyaddress
 
 Authors
 -------
@@ -140,5 +149,6 @@ License and Copyright
 ---------------------
 
 Copyright (c) 2013 Swoop Search LLC.
+Copyright (c) 2013 Josh Gachnang.
 
 This library is released under the New BSD License.
