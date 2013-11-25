@@ -273,18 +273,18 @@ class Address:
 
     def check_zip(self, token):
         """
-        Returns true if token is matches a zip code (5 numbers). Zip code must be the last token in an address (minus anything
-        removed during preprocessing such as --2 units.
+        Returns true if token is matches a zip code (5 numbers or 9 numbers). Zip code must be the last token in an
+        address (minus anything removed during preprocessing such as --2 units.
         """
         if self.zip is None:
             # print "last matched", self.last_matched
             if self.last_matched is not None:
                 return False
                 # print "zip check", len(token) == 5, re.match(r"\d{5}", token)
-            if len(token) == 5 and re.match(r"\d{5}", token):
+            if re.match(r"\d{5}(-?\d{0,4})?", token):
                 self.zip = self._clean(token)
-
                 return True
+
         return False
 
     def check_state(self, token):

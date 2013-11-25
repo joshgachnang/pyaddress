@@ -93,6 +93,28 @@ class AddressTest(unittest.TestCase):
         self.assertTrue(addr.apartment == "#2")
         # self.assertTrue(addr.building == None)
 
+    def test_9_digit_zip(self):
+        addr = Address("2 N. Park Street, Madison, WI 53703-0000", self.parser)
+        self.assertTrue(addr.house_number == "2")
+        self.assertTrue(addr.street_prefix == "N.")
+        self.assertTrue(addr.street == "Park")
+        self.assertTrue(addr.street_suffix == "St.")
+        self.assertTrue(addr.city == "Madison")
+        self.assertTrue(addr.state == "WI")
+        self.assertTrue(addr.zip == "53703-0000")
+        self.assertTrue(addr.apartment == None)
+
+    def test_9_digit_zip_no_dash(self):
+        addr = Address("2 N. Park Street, Madison, WI 537030000", self.parser)
+        self.assertTrue(addr.house_number == "2")
+        self.assertTrue(addr.street_prefix == "N.")
+        self.assertTrue(addr.street == "Park")
+        self.assertTrue(addr.street_suffix == "St.")
+        self.assertTrue(addr.city == "Madison")
+        self.assertTrue(addr.state == "WI")
+        self.assertTrue(addr.zip == "537030000")
+        self.assertTrue(addr.apartment == None)
+
     def test_suffixless_street_with_city(self):
         addr = Address("431 West Johnson, Madison, WI", self.parser)
         self.assertTrue(addr.house_number == "431")

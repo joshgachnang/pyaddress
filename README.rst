@@ -101,8 +101,8 @@ Always two capitalized letters. E.g. 123 W. Mifflin St., Madison, **WI**
 
 ``zip``
 
-The 5 digit zip code of the address, preferably following the state. 9
-digit zips not yet supported. E.g. 123 W. Mifflin St., Madison, WI
+The 5 or 9 digit zip code of the address, preferably following the state. 9
+digit zips supported in the format (xxxxx-xxx). E.g. 123 W. Mifflin St., Madison, WI
 **53703**
 
 ``full_address()``

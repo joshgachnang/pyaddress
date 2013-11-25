@@ -82,7 +82,7 @@ The state of the address, preferably following the city and a comma. Always two 
 
 `zip`
 
-The 5 digit zip code of the address, preferably following the state. 9 digit zips not yet supported. E.g. 123 W. Mifflin St., Madison, WI __53703__
+The 5 or 9 digit zip code of the address, preferably following the state. Supported 9 digit zips format is (xxxxx-xxxx). E.g. 123 W. Mifflin St., Madison, WI __53703__
 
 `full_address()`
 
