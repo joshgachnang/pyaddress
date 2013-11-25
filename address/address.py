@@ -97,19 +97,12 @@ class AddressParser(object):
         addresses = []
         # if self.logger: self.logger.debug("Multi Addresses: {0}".format(multi_address))
         for address, dstk_return in multi_address.items():
-            try:
-                if dstk_return is None:
-                    # if self.logger: self.logger.debug("DSTK None return for: {0}".format(address))
-                    continue
-                addresses.append(Address(address, self, -1, self.logger, dstk_pre_parse=dstk_return))
-                if self.logger: self.logger.debug("DSTK Address Appended: {0}".format(dstk_return))
-            except InvalidAddressException as e:
-                # if self.logger: self.logger.debug("Error from dstk Address: {0}".format(e.message))
+            if dstk_return is None:
+                # if self.logger: self.logger.debug("DSTK None return for: {0}".format(address))
                 continue
-            except DSTKConfidenceTooLowException as e:
-                continue
+            addresses.append(Address(address, self, -1, self.logger, dstk_pre_parse=dstk_return))
+            if self.logger: self.logger.debug("DSTK Address Appended: {0}".format(dstk_return))
         return addresses
-
 
     def load_suffixes(self, filename):
         """
