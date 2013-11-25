@@ -126,6 +126,17 @@ class AddressTest(unittest.TestCase):
         self.assertTrue(addr.zip == None)
         self.assertTrue(addr.apartment == None)
         # self.assertTrue(addr.building == None)
+    
+    def test_multi_word_city(self):
+        addr = Address('351 King St. #400, San Francisco, CA, 94158', self.parser)
+        self.assertEqual('351', addr.house_number)
+        self.assertEqual('San Francisco', addr.city)
+        self.assertEqual('#400', addr.apartment)
+    
+    def test_street_postdirection(self):
+        addr = Address('12006 120th Pl NE, Kirkland, WA', self.parser)
+        self.assertEqual('NE', addr.post_direction)
+    
 
     # Not yet passing.
     #def test_5_digit_house_number(self):
