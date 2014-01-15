@@ -117,34 +117,5 @@ class AddressTest(unittest.TestCase):
         addr = Address('12006 120th Pl NE, Kirkland, WA', self.parser)
         self.assertEqual('NE', addr.post_direction)
     
-
-class AddressParserTest(unittest.TestCase):
-    ap = None
-
-    def setUp(self):
-        self.ap = AddressParser()
-
-    def test_load_suffixes(self):
-        self.assertEqual(self.ap.suffixes["ALLEY"], "ALY")
-
-    def test_load_cities(self):
-        self.assertTrue("wisconsin rapids" in self.ap.cities)
-
-    def test_load_states(self):
-        self.assertEqual(self.ap.states["Wisconsin"], "WI")
-        
-
-    # Not yet passing.
-    #def test_5_digit_house_number(self):
-    #    addr = Address('51691 North Scottsdale Road', self.parser)
-    #    self.assertTrue(addr.house_number == "51691")
-    #    self.assertTrue(addr.street_prefix == "N.")
-    #    self.assertTrue(addr.street == "Scottsdale")
-    #    self.assertTrue(addr.street_suffix == "Rd.")
-    #    self.assertTrue(addr.city == None)
-    #    self.assertTrue(addr.state == None)
-    #    self.assertTrue(addr.zip == None)
-    #    self.assertTrue(addr.apartment == None)
-
 if __name__ == '__main__':
     unittest.main()
