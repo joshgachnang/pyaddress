@@ -1,1 +1,2 @@
-from .address import Address, AddressParser
+from .address import Address
+from .address_parser import AddressParser, DSTKAddressParser
