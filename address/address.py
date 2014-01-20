@@ -19,17 +19,23 @@ cwd = os.path.dirname(os.path.realpath(__file__))
 # street suffix, street name, street prefix, then building. For each sub,
 # check if that spot is already filled in the dict.
 class Address(object):
-    unmatched = False
-    house_number = None
-    street_prefix = None
-    street = None
-    street_suffix = None
-    apartment = None
-    # building = None
-    city = None
+  
+    # address components
+    primary_number = None             # House or building number
+    street_name = None 
+    street_predirection = None        # Directional that appears before street_name
+    street_postdirection = None       # Directional that appears after street_name
+    street_suffix = None              # eg Avenue, Street, Road, Drive
+    secondary_number = None           # secondary_designator of suite number, if any
+    secondary_designator = None       # Location within a complex/building (ste, apt, etc.)
+    extra_secondary_designator = None # captures subsequent designators eg room in suite 300 room 7
+    pmb_designator = None             # Private Mail box
+    pmb_number = None                 
+    city = None                       # Accepted or proper name
     state = None
-    zip = None
-    original = None
+    zip = None                        # 5 digit zip code
+    plus4 = None                      # the 4 digit add on code
+    
     # Only set for dstk
     lat = None
     lng = None
@@ -62,11 +68,11 @@ class Address(object):
         else:
             raise ValueError("Parser gave invalid backend, must be either 'default' or 'dstk'.")
 
-        if self.house_number is None or self.house_number <= 0:
+        if self.primary_number is None or self.primary_number <= 0:
             raise InvalidAddressException("Addresses must have house numbers.")
-        elif self.street is None or self.street == "":
+        elif self.street_name is None or self.street_name == "":
             raise InvalidAddressException("Addresses must have streets.")
-            # if self.house_number is None or self.street is None or self.street_suffix is None:
+            # if self.primary_number is None or self.street_name is None or self.street_suffix is None:
             # raise ValueError("Street addresses require house_number, street, and street_suffix")
 
     def parse_address(self, address):
@@ -146,7 +152,7 @@ class Address(object):
             apartment_match = re.search(regex, address, re.IGNORECASE)
             if apartment_match:
             #                print "Matched regex: ", regex, apartment_match.group()
-                self.apartment = self._clean(apartment_match.group())
+                self.secondary_designator = self._clean(apartment_match.group())
                 address = re.sub(regex, "", address, flags=re.IGNORECASE)
             # Now check for things like ",  ," which throw off dstk
         address = re.sub(r"\,\s*\,", ",", address)
@@ -200,14 +206,14 @@ class Address(object):
                 return True
             return False
             # Check that we're in the correct location, and that we have at least one comma in the address
-        if self.city is None and self.apartment is None and self.street_suffix is None and len(
+        if self.city is None and self.secondary_designator is None and self.street_suffix is None and len(
                 self.comma_separated_address) > 1:
             if token.lower() in self.parser.cities:
                 self.city = self._clean(token.capitalize())
                 return True
             return False
         # Multi word cities
-        if self.city is not None and self.street_suffix is None and self.street is None:
+        if self.city is not None and self.street_suffix is None and self.street_name is None:
             #print "Checking for multi part city", token.lower(), token.lower() in shortened_cities.keys()
             if token.lower() + ' ' + self.city in self.parser.cities:
                 self.city = self._clean((token.lower() + ' ' + self.city).capitalize())
@@ -229,22 +235,22 @@ class Address(object):
                              r'style\s\w{1,2}', r'\d{1,4}/\d{1,4}', r'\d{1,4}', r'\w{1,2}']
         for regex in apartment_regexes:
             if re.match(regex, token.lower()):
-                self.apartment = self._clean(token)
+                self.secondary_designator = self._clean(token)
                 return True
-            #        if self.apartment is None and re.match(apartment_regex_number, token.lower()):
+            #        if self.secondary_designator is None and re.match(apartment_regex_number, token.lower()):
             ##            print "Apt regex"
-            #            self.apartment = token
+            #            self.secondary_designator = token
             #            return True
             ## If we come on apt or apartment and already have an apartment number, add apt or apartment to the front
-        if self.apartment and token.lower() in ['apt', 'apartment']:
+        if self.secondary_designator and token.lower() in ['apt', 'apartment']:
         #            print "Apt in a_n"
-            self.apartment = self._clean(token + ' ' + self.apartment)
+            self.secondary_designator = self._clean(token + ' ' + self.secondary_designator)
             return True
 
-        if not self.street_suffix and not self.street and not self.apartment:
+        if not self.street_suffix and not self.street_name and not self.secondary_designator:
         #            print "Searching for unmatched term: ", token, token.lower(),
             if re.match(r'\d?\w?', token.lower()):
-                self.apartment = self._clean(token)
+                self.secondary_designator = self._clean(token)
                 return True
         return False
 
@@ -254,8 +260,8 @@ class Address(object):
         and a period after it. E.g. "St." or "Ave."
         """
         # Suffix must come before street
-        # print "Suffix check", token, "suffix", self.street_suffix, "street", self.street
-        if self.street_suffix is None and self.street is None:
+        # print "Suffix check", token, "suffix", self.street_suffix, "street", self.street_name
+        if self.street_suffix is None and self.street_name is None:
             # print "upper", token.upper()
             if token.upper() in self.parser.suffixes.keys():
                 suffix = self.parser.suffixes[token.upper()]
@@ -274,15 +280,15 @@ class Address(object):
         This check must come after the checks for house_number and street_prefix to help us deal with multi word streets.
         """
         # First check for single word streets between a prefix and a suffix
-        if self.street is None and self.street_suffix is not None and self.street_prefix is None and self.house_number is None:
-            self.street = self._clean(token.capitalize())
+        if self.street_name is None and self.street_suffix is not None and self.street_predirection is None and self.primary_number is None:
+            self.street_name = self._clean(token.capitalize())
             return True
         # Now check for multiple word streets. This check must come after the check for street_prefix and house_number for this reason.
-        elif self.street is not None and self.street_suffix is not None and self.street_prefix is None and self.house_number is None:
-            self.street = self._clean(token.capitalize() + ' ' + self.street)
+        elif self.street_name is not None and self.street_suffix is not None and self.street_predirection is None and self.primary_number is None:
+            self.street_name = self._clean(token.capitalize() + ' ' + self.street_name)
             return True
-        if not self.street_suffix and not self.street and token.lower() in self.parser.streets:
-            self.street = self._clean(token)
+        if not self.street_suffix and not self.street_name and token.lower() in self.parser.streets:
+            self.street_name = self._clean(token)
             return True
         return False
 
@@ -291,8 +297,8 @@ class Address(object):
         Finds street prefixes, such as N. or Northwest, before a street name. Standardizes to 1 or two letters, followed
         by a period.
         """
-        if self.street and not self.street_prefix and token.lower().replace('.', '') in self.parser.prefixes.keys():
-            self.street_prefix = self._clean(self.parser.prefixes[token.lower().replace('.', '')])
+        if self.street_name and not self.street_predirection and token.lower().replace('.', '') in self.parser.prefixes.keys():
+            self.street_predirection = self._clean(self.parser.prefixes[token.lower().replace('.', '')])
             return True
         return False
 
@@ -301,12 +307,12 @@ class Address(object):
         Attempts to find a house number, generally the first thing in an address. If anything is in front of it,
         we assume it is a building name.
         """
-        if self.street and self.house_number is None and re.match(street_num_regex, token.lower()):
+        if self.street_name and self.primary_number is None and re.match(street_num_regex, token.lower()):
             if '/' in token:
                 token = token.split('/')[0]
             if '-' in token:
                 token = token.split('-')[0]
-            self.house_number = self._clean(str(token))
+            self.primary_number = self._clean(str(token))
             return True
         return False
 
@@ -315,7 +321,7 @@ class Address(object):
         Building name check. If we have leftover and everything else is set, probably building names.
         Allows for multi word building names.
         """
-        if self.street and self.house_number:
+        if self.street_name and self.primary_number:
             if not self.building:
                 self.building = self._clean(token)
             else:
@@ -337,7 +343,7 @@ class Address(object):
         if len(token) <= 2:
             return False
             # Let's check for a suffix-less street.
-        if self.street_suffix is None and self.street is None and self.street_prefix is None and self.house_number is None:
+        if self.street_suffix is None and self.street_name is None and self.street_predirection is None and self.primary_number is None:
             # Streets will just be letters
             if re.match(r"[A-Za-z]", token):
                 if self.line_number >= 0:
@@ -346,7 +352,7 @@ class Address(object):
                 else:
                 #                    print "Guessing suffix-less street: ", token
                     pass
-                self.street = self._clean(token.capitalize())
+                self.street_name = self._clean(token.capitalize())
                 return True
         return False
 
@@ -357,16 +363,16 @@ class Address(object):
         addr = ""
         # if self.building:
         #     addr = addr + "(" + self.building + ") "
-        if self.house_number:
-            addr = addr + self.house_number
-        if self.street_prefix:
-            addr = addr + " " + self.street_prefix
-        if self.street:
-            addr = addr + " " + self.street
+        if self.primary_number:
+            addr = addr + self.primary_number
+        if self.street_predirection:
+            addr = addr + " " + self.street_predirection
+        if self.street_name:
+            addr = addr + " " + self.street_name
         if self.street_suffix:
             addr = addr + " " + self.street_suffix
-        if self.apartment:
-            addr = addr + " " + self.apartment
+        if self.secondary_designator:
+            addr = addr + " " + self.secondary_designator
         if self.city:
             addr = addr + ", " + self.city
         if self.state:
@@ -394,11 +400,11 @@ class Address(object):
 
     def __unicode__(self):
         address_dict = {
-            "house_number": self.house_number,
-            "street_prefix": self.street_prefix,
-            "street": self.street,
+            "house_number": self.primary_number,
+            "street_prefix": self.street_predirection,
+            "street": self.street_name,
             "street_suffix": self.street_suffix,
-            "apartment": self.apartment,
+            "apartment": self.secondary_designator,
             # "building": self.building,
             "city": self.city,
             "state": self.state,
@@ -442,7 +448,7 @@ class Address(object):
         if "street_number" in addr:
             if addr["street_number"] not in address:
                 raise InvalidAddressException("DSTK returned a house number not in the original address: {0}".format(addr))
-            self.house_number = addr["street_number"]
+            self.primary_number = addr["street_number"]
         else:
             raise InvalidAddressException("(dstk) Addresses must have house numbers: {0}".format(addr))
 
@@ -467,13 +473,13 @@ class Address(object):
 
             # try:
             #     end_pos = re.search("(" + addr["locality"] + ")", apartment).start(1) - 1
-            #     # self.apartment = apartment[:end_pos]
+            #     # self.secondary_designator = apartment[:end_pos]
             # except Exception:
             #     pass
-            # self.apartment = None
+            # self.secondary_designator = None
         # Now that we have an address, try to parse out street suffix, prefix, and street
-        if self.apartment:
-            street_addr = addr["street_address"].replace(self.apartment, '')
+        if self.secondary_designator:
+            street_addr = addr["street_address"].replace(self.secondary_designator, '')
         else:
             street_addr = addr["street_address"]
 
@@ -483,7 +489,7 @@ class Address(object):
             if self.logger: self.logger.debug("Could not split street_address: {0}".format(addr))
             raise InvalidAddressException("Could not split street_address: {0}".format(addr))
         # Get rid of house_number
-        if split_addr[0] == self.house_number:
+        if split_addr[0] == self.primary_number:
             split_addr = split_addr[1:]
         if self.logger: self.logger.debug("Checking {0} for suffixes".format(split_addr[-1].upper()))
         if split_addr[-1].upper() in parser.suffixes.keys() or split_addr[-1].upper() in parser.suffixes.values():
@@ -493,25 +499,25 @@ class Address(object):
         if split_addr[0].lower() in parser.prefixes.keys() or split_addr[0].upper() in parser.prefixes.values() or \
                                 split_addr[0].upper() + '.' in parser.prefixes.values():
             if split_addr[0][-1] == '.':
-                self.street_prefix = split_addr[0].upper()
+                self.street_predirection = split_addr[0].upper()
             else:
-                self.street_prefix = split_addr[0].upper() + '.'
-            if self.logger: self.logger.debug("Saving prefix: {0}".format(self.street_prefix))
+                self.street_predirection = split_addr[0].upper() + '.'
+            if self.logger: self.logger.debug("Saving prefix: {0}".format(self.street_predirection))
             split_addr = split_addr[1:]
         if self.logger: self.logger.debug("Saving street: {0}".format(split_addr))
-        self.street = " ".join(split_addr)
+        self.street_name = " ".join(split_addr)
         # DSTK shouldn't be guessing cities that come before streets.
-        match = re.search(self.street, address)
+        match = re.search(self.street_name, address)
         if match is None:
-            raise InvalidAddressException("DSTK picked a street not in the original address. Street: {0}. Address: {1}.".format(self.street, address))
+            raise InvalidAddressException("DSTK picked a street not in the original address. Street: {0}. Address: {1}.".format(self.street_name, address))
         street_position = match
         match = re.search(self.city, address)
         if match is None:
             raise InvalidAddressException("DSTK picked a city not in the original address. City: {0}. Address: {1}.".format(self.city, address))
         city_position = match
         if city_position.start(0) < street_position.end(0):
-            raise InvalidAddressException("DSTK picked a street that comes after the city. Street: {0}. City: {1}. Address: {2}.".format(self.street, self.city, address))
-        if self.logger: self.logger.debug("Successful DSTK address: {0}, house: {1}, street: {2}\n".format(self.original, self.house_number, self.street))
+            raise InvalidAddressException("DSTK picked a street that comes after the city. Street: {0}. City: {1}. Address: {2}.".format(self.street_name, self.city, address))
+        if self.logger: self.logger.debug("Successful DSTK address: {0}, house: {1}, street: {2}\n".format(self.original, self.primary_number, self.street_name))
 
     def _get_dstk_intersections(self, address, dstk_address):
         """
