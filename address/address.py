@@ -118,7 +118,7 @@ class Address(object):
             if self.check_apartment_number(token):
                 continue
                 # print "Unmatched token: ", token
-            #            print "Original address: ", self.original
+             # print "Original address: ", self.original
             self.unmatched = True
 
     def preprocess_address(self, address):
